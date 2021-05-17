@@ -1,0 +1,111 @@
+Starve-Free Readers Writers Problem: 
+
+********* General Explanation *********
+
+As we all know that there are basically three types of readers-writers problems.
+
+In the first problem, readers are given more priority due to
+which writers may starve. In the second problem, writers are
+given more priority due to which readers starve.
+
+To remove this starvation problem, there comes another
+problem of this type which is basically starve free.
+
+In this starve free problem neither readers nor writers are given
+priority, whichever process comes first is given the chance to
+use required resources.
+
+If some other process is already using the specified resource
+then the next comers have to wait until one completes its
+requirement.
+
+This problem can be solved by using semaphores and some sort
+of mutual exclusion.
+
+----For starve free readers writers problem, we require----
+
+1. Shared data - like file and database, etc
+2. semaphores:
+     -> mutex: mutual exclusion semaphores for updating readCount and writeCount variables.
+     -> resourceAvailable: mutual exclusion semaphores for checking whether the resource is available or not.
+
+3. Initially,
+     -> mutex = 1, resourceAvailable = 1
+     -> readCount = 0, writeCount = 0
+
+
+----Below is the algorithm for the starve free Readers-Writers problem----
+
+********* Writers part start*********
+
+wait(mutex);
+writeCount++;
+signal(mutex);
+wait(resourceAvailable);
+
+   // write the resource;
+
+wait(mutex);
+writeCount--;
+signal(mutex);
+signal(resourceAvailable);
+
+
+Here, writers come and call wait(mutex) before increasing the
+writeCount so that it can avoid incorrectness of writeCount due
+concurrent increment or decrement of writeCount. After
+increasing writeCount, it checks for the resource, if resource is
+busy, then it will wait otherwise go for writing.
+
+Soon after writing is done, a process again checks for mutex so
+that decrement can be done. Ultimately, it signals both mutex
+and resourceAvailable so that other process can use it.
+
+********* Writers part end*********
+
+
+
+********* Readers Part start*********
+
+wait(mutex);
+
+if (writeCount > 0 or readCount == 0)
+    signal(mutex);
+    wait(resourceAvailable);
+    wait(mutex);
+
+readCount ++;
+signal(mutex);
+
+ // read the resource;
+
+wait(mutex);
+
+readCount--;
+
+if(readCount == 0)
+    signal(resourceAvailable);
+
+signal(mutex);
+
+Here, readers come and call wait(mutex). If allowed to enter, it
+checks if writeCount > O or readCount == 0.
+
+If writeCount > 0, then it signals mutex so that any process can
+use it and at the same time it checks for the resource, if
+available; it calls wait(mutex) because it is now getting available
+resources so only thing needs to done is to increase readCount.
+
+When done with updating readCount, the process enters to
+read the resource.
+
+Soon after reading, it requires to decrease the readCount
+variable, so it calls wait(mutex); if allowed, then decrements the
+variable.
+
+If readCount is still > 0, it means some processes are still
+reading so the’ process will leave without calling
+signal(resourceAvailable) and just call signal(mutex) so that
+other processes can enter into reading.
+
+********* Readers part end*********
